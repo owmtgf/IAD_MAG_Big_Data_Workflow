@@ -58,7 +58,7 @@ docker compose up --build
 2. Verify running containers:
 
 ```sh
-Verify running containers:
+docker compose ps
 ```
 
 3. Check logs (producer/consumer workflow)
