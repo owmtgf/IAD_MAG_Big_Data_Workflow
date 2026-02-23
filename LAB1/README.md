@@ -79,3 +79,8 @@ docker compose down
 - Producer and consumer automatically connect to Kafka via the Docker network (`bootstrap_servers='kafka:9092'`).
 - `PYTHONUNBUFFERED=1` ensures log messages are flushed immediately.
 - Kafka topics are created in `run_containers.sh` with partitions and replication factor.
+
+
+# Project
+
+https://www.kaggle.com/datasets/agungpambudi/network-malware-detection-connection-analysis
