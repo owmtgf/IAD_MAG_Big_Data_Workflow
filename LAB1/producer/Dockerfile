@@ -1,10 +1,13 @@
 FROM python:3.10
 
 WORKDIR /app
-COPY requirements.txt .
+
+COPY ./producer/requirements.txt .
 RUN pip install -r requirements.txt
 
-COPY app.py .
+COPY producer/app.py .
+
+COPY classifier_preparation/dataset_chunked_raw /app/data_source
 
 ENV PYTHONUNBUFFERED=1
 

@@ -1,16 +1,37 @@
+#!/bin/bash
 
-docker compose up --build
+# Start containers
+docker compose up -d --build
 
-docker exec -it lab1-kafka-1 kafka-topics \
-  --bootstrap-server kafka:9092 \
-  --create \
-  --topic topic-1 \
-  --partitions 3 \
-  --replication-factor 1
+# Wait for Kafka to be ready (simple sleep, adjust if needed)
+echo "Waiting for Kafka brokers to start..."
+sleep 15
 
-  docker exec -it lab1-kafka-1 kafka-topics \
-  --bootstrap-server kafka:9092 \
-  --create \
-  --topic topic-2 \
-  --partitions 2 \
-  --replication-factor 1
+# Create topics
+echo "Creating topics..."
+docker exec kafka1 kafka-topics --create \
+  --topic raw_data \
+  --bootstrap-server kafka1:9092 \
+  --partitions 8 \
+  --replication-factor 2
+
+docker exec kafka1 kafka-topics --create \
+  --topic processed_data \
+  --bootstrap-server kafka1:9092 \
+  --partitions 8 \
+  --replication-factor 2
+
+docker exec kafka1 kafka-topics --create \
+  --topic data_quality \
+  --bootstrap-server kafka1:9092 \
+  --partitions 8 \
+  --replication-factor 2
+
+docker exec kafka1 kafka-topics --create \
+  --topic predictions \
+  --bootstrap-server kafka1:9092 \
+  --partitions 8 \
+  --replication-factor 2
+
+echo "Topics created. Showing list:"
+docker exec kafka1 kafka-topics --list --bootstrap-server kafka1:9092

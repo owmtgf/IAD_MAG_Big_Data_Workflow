@@ -7,10 +7,10 @@ from sklearn.metrics import classification_report
 
 
 params = {
-    "objective": "multi:softprob",   # probabilities (better)
+    "objective": "multi:softprob",
     "num_class": 7,
     "eval_metric": "mlogloss",
-    "tree_method": "hist",           # FAST & memory efficient
+    "tree_method": "hist",
     "max_depth": 8,
     "eta": 0.05,
     "subsample": 0.8,

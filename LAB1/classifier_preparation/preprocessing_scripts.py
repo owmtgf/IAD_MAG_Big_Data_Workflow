@@ -56,13 +56,19 @@ FEATURES_MAPPING = {
     },
 }
 
-def map_features(df: pd.DataFrame, feature_mapping: dict) -> pd.DataFrame: 
+
+def vprint(verbose, *args, **kwargs):
+    if verbose:
+        print(*args, **kwargs)
+
+
+def map_features(df: pd.DataFrame, feature_mapping: dict, verbose: bool = True) -> pd.DataFrame: 
 
     df_out = df.copy()
     
     for feature, mapping in feature_mapping.items():
         if not (feature in df_out.columns): 
-            print(f"[map_features] Feature '{feature}' not found in DataFrame. Skipping...")
+            vprint(verbose, f"[map_features] Feature '{feature}' not found in DataFrame. Skipping...")
             continue
         assert isinstance(mapping, dict), (
             f"[map_features] Mapping for feature '{feature}' must be a dict"
@@ -73,7 +79,7 @@ def map_features(df: pd.DataFrame, feature_mapping: dict) -> pd.DataFrame:
         
         invalid_keys = mapping_keys - existing_values
         if len(invalid_keys) != 0: 
-            print(
+            vprint(verbose,
                 f"[map_features] Mapping for feature '{feature}' contains labels "
                 f"not present in data: {invalid_keys}"
             )
@@ -85,7 +91,7 @@ def map_features(df: pd.DataFrame, feature_mapping: dict) -> pd.DataFrame:
     return df_out
 
 
-def replace_unknowns_with_nan(df: pd.DataFrame, placeholders, columns=None) -> pd.DataFrame:
+def replace_unknowns_with_nan(df: pd.DataFrame, placeholders, columns=None, verbose: bool = True) -> pd.DataFrame:
 
     df_out = df.copy()
 
@@ -94,7 +100,7 @@ def replace_unknowns_with_nan(df: pd.DataFrame, placeholders, columns=None) -> p
 
     for col in columns:
         if col not in df_out.columns:
-            print(f"[replace_unknowns_with_nan] Column '{col}' not found. Skipping...")
+            vprint(verbose, f"[replace_unknowns_with_nan] Column '{col}' not found. Skipping...")
             continue
 
         df_out[col] = df_out[col].replace(list(placeholders), np.nan)
@@ -161,12 +167,12 @@ def log_features(df: pd.DataFrame, features: list):
     return df_out
 
 
-def unify_numeric_columns(df: pd.DataFrame, numeric_cols: list) -> pd.DataFrame:
+def unify_numeric_columns(df: pd.DataFrame, numeric_cols: list, verbose: bool = True) -> pd.DataFrame:
     df_out = df.copy()
 
     for col in numeric_cols:
         if col not in df_out.columns:
-            print(f"[unify_numeric_columns] Column '{col}' not in DataFrame. Skipping...")
+            vprint(verbose, f"[unify_numeric_columns] Column '{col}' not in DataFrame. Skipping...")
             continue
 
         # Convert everything to numeric, coerce errors to NaN
@@ -191,14 +197,18 @@ def convert_history(df: pd.DataFrame):
     return df_out
 
 
-def run_through_pipeline(df: pd.DataFrame):
+def run_through_pipeline(df: pd.DataFrame, inference_mode: bool = False):
+
+    verbose = True
+    if inference_mode:
+        verbose = False
 
     df_out = df.copy()
 
     df_out = drop_features(df_out, feature_names=TO_DROP_COLS)
 
     placeholders = {"-", "unknown"}
-    df_out = replace_unknowns_with_nan(df_out, placeholders=placeholders)
+    df_out = replace_unknowns_with_nan(df_out, placeholders=placeholders, verbose=verbose)
 
     df_out = convert_ip_adresses(df_out)
 
@@ -206,12 +216,13 @@ def run_through_pipeline(df: pd.DataFrame):
 
     df_out = convert_history(df_out)
 
-    df_out = unify_numeric_columns(df_out, numeric_cols=NUMERIC_COLS)
+    df_out = unify_numeric_columns(df_out, numeric_cols=NUMERIC_COLS, verbose=verbose)
 
-    df_out = drop_rows_with_nan(df_out)
+    if not inference_mode:
+        df_out = drop_rows_with_nan(df_out)
 
     df_out = log_features(df_out, features=TO_LOG_COLS)
 
-    df_out = map_features(df_out, feature_mapping=FEATURES_MAPPING)
+    df_out = map_features(df_out, feature_mapping=FEATURES_MAPPING, verbose=verbose)
 
     return df_out
