@@ -1,0 +1,5 @@
+kafka-python==2.3.0
+pandas==2.2.2
+numpy==2.0.2
+streamlit==1.54.0
+streamlit-autorefresh==1.0.1

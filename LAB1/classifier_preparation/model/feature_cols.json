@@ -1,0 +1,1 @@
+["proto", "conn_state", "orig_is_private", "resp_is_private", "resp_well_known", "orig_ephemeral", "hist_has_syn", "hist_has_fin", "hist_has_rst", "hist_has_data", "duration_log", "orig_bytes_log", "resp_bytes_log", "orig_pkts_log", "resp_pkts_log", "orig_ip_bytes_log", "resp_ip_bytes_log"]
