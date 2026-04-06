@@ -1,0 +1,50 @@
+services:
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    container_name: namenode
+    environment:
+      - CLUSTER_NAME=test
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - HDFS_CONF_dfs_blocksize=134217728
+    ports:
+      - "9870:9870"
+      - "9000:9000"
+    volumes:
+      - ../data:/data
+
+  datanode:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - SERVICE_PRECONDITION=namenode:9870
+      - HDFS_CONF_dfs_blocksize=134217728
+    depends_on:
+      - namenode
+
+  spark-master:
+    build:
+      context: ../spark-app
+      dockerfile: dockerfile
+    container_name: spark-master
+    command: >
+      /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
+    ports:
+      - "8080:8080"
+      - "7077:7077"
+    volumes:
+      - ../spark-app:/app
+      - ../results:/logs
+
+  spark-worker:
+    build:
+      context: ../spark-app
+      dockerfile: dockerfile
+    container_name: spark-worker
+    environment:
+      - SPARK_WORKER_MEMORY=2g
+      - SPARK_WORKER_CORES=2
+    command: >
+      /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker
+      spark://spark-master:7077
+    depends_on:
+      - spark-master
