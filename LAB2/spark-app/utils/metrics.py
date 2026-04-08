@@ -1,5 +1,6 @@
 import json
 
+
 def init_metrics(args):
     return {
         "config": {
@@ -11,6 +12,7 @@ def init_metrics(args):
         "partitions": None,
         "run_stats": {}
     }
+
 
 def save_metrics(metrics, filename):
     with open(filename, "w") as f:

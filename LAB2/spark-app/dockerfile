@@ -1,5 +1,6 @@
 FROM apache/spark:latest
 
+ENV PYTHONDONTWRITEBYTECODE=1
 USER root
 WORKDIR /app
 COPY requirements.txt .

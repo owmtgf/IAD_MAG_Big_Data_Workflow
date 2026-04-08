@@ -22,6 +22,7 @@ services:
       - namenode
 
   spark-master:
+    user: "0"
     build:
       context: ../spark-app
       dockerfile: dockerfile

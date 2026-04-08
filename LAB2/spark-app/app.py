@@ -1,5 +1,5 @@
-import argparse
 import time
+import argparse
 
 from utils.spark import init_spark
 from utils.data import load_data
@@ -9,6 +9,7 @@ from utils.benchmarks import (
     benchmark_query_medium,
     benchmark_query_heavy,
 )
+
 
 DATA_PATH = "hdfs://namenode:9000/input/spotify_tracks_clean.parquet"
 LOG_DIR = "/logs"
@@ -35,9 +36,9 @@ def main():
     if args.optimized:
         df = df.repartition(4).cache()
 
-    benchmark_query_light(df, spark, metrics)
-    benchmark_query_medium(df, spark, metrics)
-    benchmark_query_heavy(df, spark, metrics)
+    benchmark_query_light(df, metrics)
+    benchmark_query_medium(df, metrics)
+    benchmark_query_heavy(df, metrics)
 
     metrics["total_time_sec"] = round(time.perf_counter() - total_start, 4)
 

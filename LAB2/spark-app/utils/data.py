@@ -1,7 +1,9 @@
 import time
 
+
 def now():
     return time.perf_counter()
+
 
 def load_data(spark, path, metrics):
     t = now()

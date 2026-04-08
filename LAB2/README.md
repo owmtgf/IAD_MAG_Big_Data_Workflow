@@ -1,47 +1,127 @@
-# Spark + Hadoop Lab
+# Spark + Hadoop Benchmark Project
+
+This project demonstrates performance benchmarking of distributed data processing using Apache Spark in a containerized environment. It evaluates how different configurations (number of nodes and optimization strategies) affect execution time and memory usage.
+
+---
 
 ## Dataset
 Spotify Tracks Dataset (114k rows, 20 features)
+## 📎 Dataset
 
-## Experiments
-1. 1 DataNode
-2. 1 DataNode (optimized)
-3. 3 DataNode
-4. 3 DataNode (optimized)
+The [dataset](https://www.kaggle.com/datasets/maharshipandya/-spotify-tracks-dataset) used in this project is based on Spotify tracks and includes features such as:
 
-## Optimizations
-- repartition
-- cache
+* track popularity
+* energy
+* danceability
+* genre
+* ...
 
-## Results
-(таблица + график)
-
-## Conclusion
-- 3 nodes faster than 1
-- optimization reduces execution time
+There is some preprocessing was performed, you can find it in `./data/preprocessing.ipynb` file.
 
 
-```sh
-docker compose -f docker-compose-1node.yml up -d
-# wait for 10-20 seconds before continue 
-docker exec -it namenode bash
+## 📁 Project Structure
 
-cd /data/
-bash upload_to_hdfs.sh 
+* `./data/` \
+  Contains the dataset, preprocessing notebook, and HDFS upload script.
 
-# verify file uploaded
-hdfs dfs -ls /input                         # file existence verification
-hdfs dfs -du -h /input                      # file size check
-hdfs dfs -cat /input/spotify.csv | head     # first 10 file rows output
+* `./docker/` \
+  Contains Docker setup and scripts to run the cluster and benchmarks.
 
+  * `docker-compose.yml` - defines the Spark + HDFS cluster
+  * `run_benchmark.sh` - runs a single benchmark
+  * `run_all_benchmarks.sh` - runs full experiment suite
 
-docker exec -it spark-master /opt/spark/bin/spark-submit /app/app.py
+* `./results/` \
+  Stores benchmark outputs and analysis:
 
-# docker exec -it spark-master \
-#   /opt/spark/bin/spark-submit \
-#   --master spark://spark-master:7077 \
-#   /app/app.py
+  * JSON metrics from experiments
+  * Logs from runs
+  * Jupyter notebook with plots
 
+* `./spark-app/` \
+  Main Spark application:
 
-docker compose -f docker-compose-1node.yml down -v
+  * `app.py` - entry point for benchmarks
+  * `utils/` - helper modules for data processing, Spark setup, benchmarking and metrics
+
+---
+
+## 🚀 How to Run
+
+### 1. Start the cluster and run benchmarks
+
 ```
+cd ./docker/
+bash run_all_benchmarks.sh
+```
+
+You can control the experiment using environment variables:
+
+* `NUM_DATA_NODES` - number of datanodes (e.g., 1 or 3)
+* `OPTIMIZED` - enable optimized execution (true/false)
+
+---
+
+### 2. Run an individual benchmark
+
+```
+cd ./docker/
+bash run_benchmark.sh
+```
+
+---
+
+### 3. View results
+
+After execution, results are saved in:
+
+* `results/run_nodes*.json` - raw metrics
+* `results/logs/` - execution logs
+* `results/plots.ipynb` - visualizations
+
+---
+
+## 📊 Benchmark Design
+
+The project evaluates three types of queries:
+
+* **Light** - simple filters and counts
+* **Medium** - aggregations and grouping
+* **Heavy** - joins, window functions, and sorting
+
+Each query is executed multiple times, and the following metrics are collected:
+
+* Execution time
+* Memory consumption (delta)
+* Speedup (for multi-node setups)
+
+---
+
+## ⚙️ Optimization
+
+The project includes an optional optimization mode:
+
+* Caching intermediate results
+* Repartitioning data
+* Reducing unnecessary recomputation
+
+This can be enabled via the `--optimized` flag.
+
+---
+
+## 📈 Key Findings
+
+* Increasing the number of nodes does not always lead to proportional performance gains.
+* The benefit of distributed execution depends heavily on query complexity.
+* Optimization improves performance for some queries, but not uniformly across all workloads.
+* Memory usage is more stable when analyzed using delta rather than peak values.
+
+---
+
+## 📌 Notes
+
+* Results may vary depending on hardware and container resource limits
+* JVM garbage collection and caching can affect memory measurements
+* First runs may be slower, so warm-up was utilized
+
+---

@@ -6,7 +6,7 @@ OPTIMIZED=${OPTIMIZED:-false}
 
 echo -e "${GREEN}[INFO]${NC} Starting cluster with $NUM_DATA_NODES datanodes..."
 echo -e "${GREEN}[INFO]${NC} Optimized: $OPTIMIZED"
-docker compose -f docker-compose.yml up -d --scale datanode=$NUM_DATA_NODES
+docker compose -f docker-compose.yml up -d --build --scale datanode=$NUM_DATA_NODES
 
 echo -e "${YELLOW}[INFO]${NC} Waiting for HDFS..."
 until docker exec namenode hdfs dfs -ls / > /dev/null 2>&1; do
@@ -27,6 +27,9 @@ if [ "$OPTIMIZED" = true ]; then
 else
   OPT_FLAG=""
 fi
+
+docker exec spark-master mkdir -p /logs
+docker exec spark-master chmod -R a+rwx /logs
 
 docker exec spark-master \
   /opt/spark/bin/spark-submit \

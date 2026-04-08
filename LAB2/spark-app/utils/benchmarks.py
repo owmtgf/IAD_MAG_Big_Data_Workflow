@@ -1,11 +1,14 @@
 import time
-from pyspark.sql.functions import col, avg, count, sum as _sum, desc
-from tqdm import tqdm
 import threading
+from tqdm import tqdm
+from pyspark.sql.window import Window
+from pyspark.sql.functions import rank
+from pyspark.sql.functions import col, avg, count, sum as _sum, desc
 
 
 def now():
     return time.perf_counter()
+
 
 def get_container_memory_mb():
     try:
@@ -18,12 +21,14 @@ def get_container_memory_mb():
         except:
             return None
         
+
 def monitor_container_memory(interval, stop_event, storage):
     while not stop_event.is_set():
         mem = get_container_memory_mb()
         if mem is not None:
             storage.append(mem)
         time.sleep(interval)
+
 
 def run_with_memory_tracking(fn, interval=0.05):
     memory_trace = []
@@ -48,7 +53,8 @@ def run_with_memory_tracking(fn, interval=0.05):
         "memory_trace": memory_trace
     }
 
-def run_multiple_times(fn, spark, runs=20):
+
+def run_multiple_times(fn, runs=20):
     times = []
     peak_memories = []
     deltas = []
@@ -85,7 +91,7 @@ def run_multiple_times(fn, spark, runs=20):
     }
 
 
-def benchmark_query_light(df, spark, metrics: dict, runs=20):
+def benchmark_query_light(df, metrics: dict, runs=10):
     scenarios = {
         "popularity_30": lambda: df.filter(col("popularity") > 30).count(),
         "popularity_50": lambda: df.filter(col("popularity") > 50).count(),
@@ -96,50 +102,50 @@ def benchmark_query_light(df, spark, metrics: dict, runs=20):
 
     for name, fn in scenarios.items():
         print(f"[LIGHT] Running {name}")
-        metrics["run_stats"]["light"][name] = run_multiple_times(fn, spark, runs)
+        metrics["run_stats"]["light"][name] = run_multiple_times(fn, runs)
 
 
-def benchmark_query_medium(df, spark, metrics: dict, runs=20):
+def benchmark_query_medium(df, metrics: dict, runs=10):
     scenarios = {
         "group_genre": lambda: df.groupBy("track_genre").agg(
             avg("energy"),
             avg("danceability"),
             count("*")
-        ).count(),
+        ).persist().count(),
 
         "group_genre_filtered": lambda: df.filter(
             col("popularity") > 50
         ).groupBy("track_genre").agg(
             avg("energy"),
             count("*")
-        ).count(),
+        ).collect(),
     }
 
     metrics["run_stats"]["medium"] = {}
 
     for name, fn in scenarios.items():
         print(f"[MEDIUM] Running {name}")
-        metrics["run_stats"]["medium"][name] = run_multiple_times(fn, spark, runs)
+        metrics["run_stats"]["medium"][name] = run_multiple_times(fn, runs)
 
 
-def benchmark_query_heavy(df, spark, metrics: dict, runs=20):
+def benchmark_query_heavy(df, metrics: dict, runs=10):
     scenarios = {
-        "artist_full": lambda: df.groupBy("artist").agg(
-            avg("popularity"),
-            _sum("duration_ms"),
-            count("*")
-        ).orderBy(desc("avg(popularity)")).count(),
+        "self_join": lambda: df.alias("a").join(
+            df.alias("b"),
+            col("a.artist") == col("b.artist")
+        ).limit(100000).collect(),
 
-        "artist_top100": lambda: df.groupBy("artist").agg(
-            avg("popularity"),
-            count("*")
-        ).orderBy(desc("avg(popularity)")).limit(100).count(),
+        "window_rank": lambda: df.withColumn(
+            "rank",
+            rank().over(
+                Window.partitionBy("artist").orderBy(desc("popularity"))
+            )
+        ).collect(),
 
-        "artist_filtered": lambda: df.filter(
-            col("popularity") > 60
-        ).groupBy("artist").agg(
-            avg("popularity"),
-            count("*")
+        "full_sort": lambda: df.orderBy(desc("popularity")).collect(),
+
+        "cross_join_sample": lambda: df.limit(5000).crossJoin(
+            df.limit(5000)
         ).count(),
     }
 
@@ -147,4 +153,4 @@ def benchmark_query_heavy(df, spark, metrics: dict, runs=20):
 
     for name, fn in scenarios.items():
         print(f"[HEAVY] Running {name}")
-        metrics["run_stats"]["heavy"][name] = run_multiple_times(fn, spark, runs)
+        metrics["run_stats"]["heavy"][name] = run_multiple_times(fn, runs)
