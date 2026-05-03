@@ -30,7 +30,6 @@ def write_delta(name, path, lazy_df, partition_by=None):
     print(f"  rows: {df.height}")
     print(f"  columns: {len(df.columns)}")
     print(f"  delta_version: {dt.version()}")
-    print(f"  files_count: {len(dt.files())}")
 
     return df
 
@@ -44,7 +43,6 @@ def main():
     silver_dt = DeltaTable(SOURCE)
 
     print(f"Silver source version: {silver_dt.version()}")
-    print(f"Silver source files: {len(silver_dt.files())}")
 
     lf = pl.scan_delta(SOURCE)
 
@@ -159,4 +157,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    

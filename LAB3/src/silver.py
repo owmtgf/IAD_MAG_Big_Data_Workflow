@@ -17,7 +17,6 @@ def main():
 
     bronze_dt = DeltaTable(SOURCE)
     print(f"Bronze source version: {bronze_dt.version()}")
-    print(f"Bronze source files: {len(bronze_dt.files())}")
 
     lf = pl.scan_delta(SOURCE)
 
@@ -97,6 +96,7 @@ def main():
             pl.col("ArrDelay").cast(pl.Float64).alias("arr_delay"),
             "is_delayed",
         ])
+        .unique(subset=["flight_id"], keep="last")
     )
 
     print("=== SILVER LAZY QUERY PLAN ===")
@@ -162,7 +162,6 @@ def main():
     if before_version is not None:
         print(f"Silver version before merge: {before_version}")
     print(f"Silver current version: {silver_dt.version()}")
-    print(f"Silver files count: {len(silver_dt.files())}")
     print(f"Silver schema fields: {len(silver_dt.schema().fields)}")
 
     print("=== SILVER LAYER FINISHED ===")
@@ -170,4 +169,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    

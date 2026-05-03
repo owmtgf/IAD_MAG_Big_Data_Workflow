@@ -3,5 +3,4 @@ deltalake
 pyarrow
 pandas
 scikit-learn
-mlflow
-xgboost
+mlflow==2.16.2

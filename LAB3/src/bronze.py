@@ -73,7 +73,6 @@ def main():
 
     print("=== BRONZE TABLE INFO BEFORE OPTIMIZE ===")
     print(f"Bronze current version: {bronze_dt.version()}")
-    print(f"Bronze files count: {len(bronze_dt.files())}")
 
     print("=== BRONZE OPTIMIZE COMPACTION ===")
     optimize_result = bronze_dt.optimize.compact()
@@ -83,11 +82,9 @@ def main():
 
     print("=== BRONZE TABLE INFO AFTER OPTIMIZE ===")
     print(f"Bronze current version: {bronze_dt.version()}")
-    print(f"Bronze files count: {len(bronze_dt.files())}")
 
     print("=== BRONZE LAYER FINISHED ===")
 
 
 if __name__ == "__main__":
     main()
-    
